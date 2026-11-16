@@ -1,0 +1,12 @@
+{
+  "name": "PEL - Bisiklet Yol Arkadaşı & Canlı Yayın",
+  "description": "PEL V20 bisiklet GPS takip, Google Maps harita ve parkur keşfi, cihazlar arası canlı yayın ve anlık peloton sohbet platformu.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

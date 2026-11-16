@@ -1,0 +1,380 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Deny all access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll([
+        'uid', 'displayName', 'photoUrl', 'bio', 'ftpWatts', 'weightKg', 'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'uid', 'displayName', 'photoUrl', 'bio', 'ftpWatts', 'weightKg', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.uid) &&
+      data.uid == request.auth.uid &&
+      data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+      data.photoUrl is string && data.photoUrl.size() <= 512 &&
+      data.bio is string && data.bio.size() <= 240 &&
+      data.ftpWatts is number && data.ftpWatts >= 50 && data.ftpWatts <= 800 &&
+      data.weightKg is number && data.weightKg >= 30 && data.weightKg <= 250 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivateInfo(data) {
+      return data.keys().hasAll(['uid', 'email', 'updatedAt']) &&
+      data.keys().hasOnly(['uid', 'email', 'updatedAt']) &&
+      isValidId(data.uid) &&
+      data.uid == request.auth.uid &&
+      data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidPublicProfile(data) {
+      return data.keys().hasAll([
+        'uid', 'displayName', 'photoUrl', 'bio', 'ftpWatts', 'totalDistanceKm',
+        'totalClimbM', 'ridesCount', 'points', 'tier', 'divisionName',
+        'isPublic', 'isOnline', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'uid', 'displayName', 'photoUrl', 'bio', 'ftpWatts', 'totalDistanceKm',
+        'totalClimbM', 'ridesCount', 'points', 'tier', 'divisionName',
+        'isPublic', 'isOnline', 'updatedAt'
+      ]) &&
+      isValidId(data.uid) &&
+      data.uid == request.auth.uid &&
+      data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+      data.photoUrl is string && data.photoUrl.size() <= 512 &&
+      data.bio is string && data.bio.size() <= 240 &&
+      data.ftpWatts is number && data.ftpWatts >= 50 && data.ftpWatts <= 800 &&
+      data.totalDistanceKm is number && data.totalDistanceKm >= 0 && data.totalDistanceKm <= 200000 &&
+      data.totalClimbM is number && data.totalClimbM >= 0 && data.totalClimbM <= 2000000 &&
+      data.ridesCount is number && data.ridesCount >= 0 && data.ridesCount <= 50000 &&
+      data.points is number && data.points >= 0 && data.points <= 1000000 &&
+      data.tier is string && data.tier.size() >= 1 && data.tier.size() <= 40 &&
+      data.divisionName is string && data.divisionName.size() >= 1 && data.divisionName.size() <= 60 &&
+      data.isPublic == true &&
+      data.isOnline is bool &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidPublicChatMessage(data) {
+      return data.keys().hasAll([
+        'id', 'roomId', 'userId', 'userName', 'userAvatar', 'text',
+        'mediaUrl', 'mediaType', 'msgType', 'isPublic', 'clientTimestamp', 'createdAt'
+      ]) && data.keys().hasOnly([
+        'id', 'roomId', 'userId', 'userName', 'userAvatar', 'text',
+        'mediaUrl', 'mediaType', 'msgType', 'isPublic', 'clientTimestamp', 'createdAt'
+      ]) &&
+      isValidId(data.id) &&
+      data.roomId is string && data.roomId.size() >= 1 && data.roomId.size() <= 80 && data.roomId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      isValidId(data.userId) &&
+      data.userId == request.auth.uid &&
+      data.userName is string && data.userName.size() >= 1 && data.userName.size() <= 80 &&
+      data.userAvatar is string && data.userAvatar.size() <= 512 &&
+      data.text is string && data.text.size() <= 2000 &&
+      data.mediaUrl is string && data.mediaUrl.size() <= 450000 &&
+      data.mediaType in ['none', 'image', 'video'] &&
+      data.msgType in ['chat', 'alert', 'route_share', 'system'] &&
+      data.isPublic == true &&
+      data.clientTimestamp is number && data.clientTimestamp > 0 &&
+      data.createdAt is timestamp;
+    }
+
+    function isValidDmThread(data) {
+      return data.keys().hasAll([
+        'id', 'participantIds', 'lastMessageText', 'lastSenderId', 'lastTimestamp', 'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'id', 'participantIds', 'lastMessageText', 'lastSenderId', 'lastTimestamp', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.id) &&
+      data.participantIds is list &&
+      data.participantIds.size() == 2 &&
+      isValidId(data.participantIds[0]) &&
+      isValidId(data.participantIds[1]) &&
+      data.participantIds[0] != data.participantIds[1] &&
+      data.lastMessageText is string && data.lastMessageText.size() <= 300 &&
+      isValidId(data.lastSenderId) &&
+      data.lastSenderId == request.auth.uid &&
+      data.lastTimestamp is number && data.lastTimestamp > 0 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidDmMessage(data) {
+      return data.keys().hasAll([
+        'id', 'dmRoomId', 'participantIds', 'userId', 'userName', 'userAvatar',
+        'recipientId', 'recipientName', 'text', 'mediaUrl', 'mediaType', 'clientTimestamp', 'createdAt'
+      ]) && data.keys().hasOnly([
+        'id', 'dmRoomId', 'participantIds', 'userId', 'userName', 'userAvatar',
+        'recipientId', 'recipientName', 'text', 'mediaUrl', 'mediaType', 'clientTimestamp', 'createdAt'
+      ]) &&
+      isValidId(data.id) &&
+      isValidId(data.dmRoomId) &&
+      data.participantIds is list &&
+      data.participantIds.size() == 2 &&
+      isValidId(data.participantIds[0]) &&
+      isValidId(data.participantIds[1]) &&
+      data.participantIds[0] != data.participantIds[1] &&
+      isValidId(data.userId) &&
+      data.userId == request.auth.uid &&
+      data.userName is string && data.userName.size() >= 1 && data.userName.size() <= 80 &&
+      data.userAvatar is string && data.userAvatar.size() <= 512 &&
+      isValidId(data.recipientId) &&
+      data.recipientId in data.participantIds &&
+      data.recipientId != data.userId &&
+      data.recipientName is string && data.recipientName.size() >= 1 && data.recipientName.size() <= 80 &&
+      data.text is string && data.text.size() <= 2000 &&
+      data.mediaUrl is string && data.mediaUrl.size() <= 450000 &&
+      data.mediaType in ['none', 'image', 'video'] &&
+      data.clientTimestamp is number && data.clientTimestamp > 0 &&
+      data.createdAt is timestamp;
+    }
+
+    function isValidSavedRide(data) {
+      return data.keys().hasAll([
+        'id', 'userId', 'title', 'date', 'sportType', 'distanceKm', 'durationSec',
+        'movingTimeSec', 'avgSpeedKmH', 'maxSpeedKmH', 'climbM', 'descentM',
+        'effort', 'notes', 'points', 'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'id', 'userId', 'title', 'date', 'sportType', 'distanceKm', 'durationSec',
+        'movingTimeSec', 'avgSpeedKmH', 'maxSpeedKmH', 'climbM', 'descentM',
+        'effort', 'notes', 'points', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.id) &&
+      isValidId(data.userId) &&
+      data.userId == request.auth.uid &&
+      data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+      data.date is string && data.date.size() >= 1 && data.date.size() <= 40 &&
+      data.sportType in ['road', 'gravel', 'mtb', 'city', 'ebike'] &&
+      data.distanceKm is number && data.distanceKm >= 0 && data.distanceKm <= 2000 &&
+      data.durationSec is number && data.durationSec >= 0 && data.durationSec <= 604800 &&
+      data.movingTimeSec is number && data.movingTimeSec >= 0 && data.movingTimeSec <= 604800 &&
+      data.avgSpeedKmH is number && data.avgSpeedKmH >= 0 && data.avgSpeedKmH <= 150 &&
+      data.maxSpeedKmH is number && data.maxSpeedKmH >= 0 && data.maxSpeedKmH <= 180 &&
+      data.climbM is number && data.climbM >= 0 && data.climbM <= 30000 &&
+      data.descentM is number && data.descentM >= 0 && data.descentM <= 30000 &&
+      data.effort is number && data.effort >= 1 && data.effort <= 10 &&
+      data.notes is string && data.notes.size() <= 600 &&
+      data.points is list && data.points.size() <= 350 &&
+      (data.points.size() == 0 || data.points[0] is map) &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidUserBadge(data) {
+      return data.keys().hasAll([
+        'id', 'userId', 'badgeId', 'unlockedAt', 'triggerRideTitle', 'xpReward', 'createdAt'
+      ]) && data.keys().hasOnly([
+        'id', 'userId', 'badgeId', 'unlockedAt', 'triggerRideTitle', 'xpReward', 'createdAt'
+      ]) &&
+      isValidId(data.id) &&
+      isValidId(data.userId) &&
+      data.userId == request.auth.uid &&
+      isValidId(data.badgeId) &&
+      data.unlockedAt is string && data.unlockedAt.size() >= 1 && data.unlockedAt.size() <= 40 &&
+      data.triggerRideTitle is string && data.triggerRideTitle.size() <= 120 &&
+      data.xpReward is number && data.xpReward >= 0 && data.xpReward <= 10000 &&
+      data.createdAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+      allow create: if isVerifiedUser() &&
+        isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUserProfile(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUserProfile(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName', 'photoUrl', 'bio', 'ftpWatts', 'weightKg', 'updatedAt'
+        ]);
+      allow delete: if false;
+
+      match /private/{docId} {
+        allow get: if isOwner(userId) && isValidId(userId) && docId == 'info';
+        allow list: if false;
+        allow create: if isVerifiedUser() &&
+          isOwner(userId) &&
+          isValidId(userId) &&
+          docId == 'info' &&
+          isValidUserPrivateInfo(incoming()) &&
+          incoming().updatedAt == request.time;
+        allow update: if isVerifiedUser() &&
+          isOwner(userId) &&
+          isValidId(userId) &&
+          docId == 'info' &&
+          isValidUserPrivateInfo(incoming()) &&
+          incoming().uid == existing().uid &&
+          incoming().updatedAt == request.time &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['email', 'updatedAt']);
+        allow delete: if false;
+      }
+
+      match /rides/{rideId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(rideId);
+        allow list: if isOwner(userId) && isValidId(userId) && existing().userId == request.auth.uid;
+        allow create: if isVerifiedUser() &&
+          isOwner(userId) &&
+          isValidId(userId) &&
+          isValidId(rideId) &&
+          exists(/databases/$(database)/documents/users/$(userId)) &&
+          isValidSavedRide(incoming()) &&
+          incoming().id == rideId &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time;
+        allow update: if isVerifiedUser() &&
+          isOwner(userId) &&
+          isValidId(userId) &&
+          isValidId(rideId) &&
+          exists(/databases/$(database)/documents/users/$(userId)) &&
+          isValidSavedRide(incoming()) &&
+          incoming().id == existing().id &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'notes', 'effort', 'sportType', 'updatedAt'
+          ]);
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(rideId);
+      }
+
+      match /badges/{badgeId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(badgeId);
+        allow list: if isOwner(userId) && isValidId(userId) && existing().userId == request.auth.uid;
+        allow create: if isVerifiedUser() &&
+          isOwner(userId) &&
+          isValidId(userId) &&
+          isValidId(badgeId) &&
+          exists(/databases/$(database)/documents/users/$(userId)) &&
+          isValidUserBadge(incoming()) &&
+          incoming().id == badgeId &&
+          incoming().badgeId == badgeId &&
+          incoming().createdAt == request.time;
+        allow update: if false;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(badgeId);
+      }
+    }
+
+    match /publicProfiles/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || (resource != null && existing().isPublic == true));
+      allow list: if isSignedIn() && existing().isPublic == true;
+      allow create: if isVerifiedUser() &&
+        isOwner(userId) &&
+        isValidId(userId) &&
+        isValidPublicProfile(incoming()) &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isOwner(userId) &&
+        isValidId(userId) &&
+        isValidPublicProfile(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName', 'photoUrl', 'bio', 'ftpWatts', 'totalDistanceKm',
+          'totalClimbM', 'ridesCount', 'points', 'tier', 'divisionName',
+          'isPublic', 'isOnline', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /publicMessages/{messageId} {
+      allow get: if isSignedIn() && isValidId(messageId) && resource != null && existing().isPublic == true;
+      allow list: if isSignedIn() && existing().isPublic == true;
+      allow create: if isVerifiedUser() &&
+        isValidId(messageId) &&
+        isValidPublicChatMessage(incoming()) &&
+        incoming().id == messageId &&
+        incoming().userId == request.auth.uid &&
+        incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isSignedIn() && isValidId(messageId) && existing().userId == request.auth.uid;
+    }
+
+    match /dmThreads/{dmRoomId} {
+      allow get: if isSignedIn() && isValidId(dmRoomId) && (
+        (resource == null && dmRoomId.matches('^dm_.*' + request.auth.uid + '.*$')) ||
+        (resource != null && request.auth.uid in existing().participantIds)
+      );
+      allow list: if isSignedIn() && request.auth.uid in existing().participantIds;
+      allow create: if isVerifiedUser() &&
+        isValidId(dmRoomId) &&
+        isValidDmThread(incoming()) &&
+        incoming().id == dmRoomId &&
+        request.auth.uid in incoming().participantIds &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(dmRoomId) &&
+        isValidDmThread(incoming()) &&
+        request.auth.uid in existing().participantIds &&
+        incoming().id == existing().id &&
+        incoming().participantIds == existing().participantIds &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'lastMessageText', 'lastSenderId', 'lastTimestamp', 'updatedAt'
+        ]);
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow get: if isSignedIn() &&
+          isValidId(dmRoomId) &&
+          isValidId(messageId) &&
+          request.auth.uid in get(/databases/$(database)/documents/dmThreads/$(dmRoomId)).data.participantIds;
+        allow list: if isSignedIn() &&
+          isValidId(dmRoomId) &&
+          request.auth.uid in existing().participantIds;
+        allow create: if isVerifiedUser() &&
+          isValidId(dmRoomId) &&
+          isValidId(messageId) &&
+          exists(/databases/$(database)/documents/dmThreads/$(dmRoomId)) &&
+          request.auth.uid in get(/databases/$(database)/documents/dmThreads/$(dmRoomId)).data.participantIds &&
+          isValidDmMessage(incoming()) &&
+          incoming().id == messageId &&
+          incoming().dmRoomId == dmRoomId &&
+          incoming().participantIds == get(/databases/$(database)/documents/dmThreads/$(dmRoomId)).data.participantIds &&
+          incoming().userId == request.auth.uid &&
+          incoming().createdAt == request.time;
+        allow update: if false;
+        allow delete: if isSignedIn() &&
+          isValidId(dmRoomId) &&
+          isValidId(messageId) &&
+          existing().userId == request.auth.uid;
+      }
+    }
+  }
+}

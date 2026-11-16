@@ -1,0 +1,565 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated cyclist profile data scoped to the signed-in user",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Authentication user UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Athlete display name",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "photoUrl": {
+          "type": "string",
+          "description": "Athlete profile photo URL",
+          "maxLength": 512
+        },
+        "bio": {
+          "type": "string",
+          "description": "Short rider biography",
+          "maxLength": 240
+        },
+        "ftpWatts": {
+          "type": "number",
+          "description": "Functional Threshold Power in watts"
+        },
+        "weightKg": {
+          "type": "number",
+          "description": "Rider body weight in kilograms"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of profile creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last profile update"
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "photoUrl",
+        "bio",
+        "ftpWatts",
+        "weightKg",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated private PII document for authenticated user",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Authentication user UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified account email address",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of update"
+        }
+      },
+      "required": ["uid", "email", "updatedAt"]
+    },
+    "PublicProfile": {
+      "title": "PublicProfile",
+      "description": "Non-PII public rider summary visible to authenticated community members for real chat directory and leaderboard",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "photoUrl": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "bio": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "ftpWatts": {
+          "type": "number"
+        },
+        "totalDistanceKm": {
+          "type": "number"
+        },
+        "totalClimbM": {
+          "type": "number"
+        },
+        "ridesCount": {
+          "type": "number"
+        },
+        "points": {
+          "type": "number"
+        },
+        "tier": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "divisionName": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "isOnline": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "photoUrl",
+        "bio",
+        "ftpWatts",
+        "totalDistanceKm",
+        "totalClimbM",
+        "ridesCount",
+        "points",
+        "tier",
+        "divisionName",
+        "isPublic",
+        "isOnline",
+        "updatedAt"
+      ]
+    },
+    "PublicChatMessage": {
+      "title": "PublicChatMessage",
+      "description": "Real-time persistent public or group ride chat message",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "roomId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "userAvatar": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "mediaUrl": {
+          "type": "string",
+          "maxLength": 450000
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["none", "image", "video"]
+        },
+        "msgType": {
+          "type": "string",
+          "enum": ["chat", "alert", "route_share", "system"]
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "clientTimestamp": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "roomId",
+        "userId",
+        "userName",
+        "userAvatar",
+        "text",
+        "mediaUrl",
+        "mediaType",
+        "msgType",
+        "isPublic",
+        "clientTimestamp",
+        "createdAt"
+      ]
+    },
+    "DmThread": {
+      "title": "DmThread",
+      "description": "Private 1-to-1 conversation metadata strictly scoped to 2 participant UIDs",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "participantIds": {
+          "type": "array"
+        },
+        "lastMessageText": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "lastSenderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "lastTimestamp": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "participantIds",
+        "lastMessageText",
+        "lastSenderId",
+        "lastTimestamp",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "DmMessage": {
+      "title": "DmMessage",
+      "description": "Private 1-to-1 message scoped to the two participants of the parent DM thread",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "dmRoomId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "participantIds": {
+          "type": "array"
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "userAvatar": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "recipientId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "recipientName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "mediaUrl": {
+          "type": "string",
+          "maxLength": 450000
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["none", "image", "video"]
+        },
+        "clientTimestamp": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "dmRoomId",
+        "participantIds",
+        "userId",
+        "userName",
+        "userAvatar",
+        "recipientId",
+        "recipientName",
+        "text",
+        "mediaUrl",
+        "mediaType",
+        "clientTimestamp",
+        "createdAt"
+      ]
+    },
+    "SavedRide": {
+      "title": "SavedRide",
+      "description": "Recorded GPS cycling activity owned by an authenticated user",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique ride identifier",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Ride activity title",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO date of the ride",
+          "maxLength": 40
+        },
+        "sportType": {
+          "type": "string",
+          "enum": ["road", "gravel", "mtb", "city", "ebike"],
+          "description": "Cycling discipline"
+        },
+        "distanceKm": {
+          "type": "number",
+          "description": "Total distance in kilometers"
+        },
+        "durationSec": {
+          "type": "number",
+          "description": "Total elapsed time in seconds"
+        },
+        "movingTimeSec": {
+          "type": "number",
+          "description": "Active moving time in seconds"
+        },
+        "avgSpeedKmH": {
+          "type": "number",
+          "description": "Average speed in km/h"
+        },
+        "maxSpeedKmH": {
+          "type": "number",
+          "description": "Maximum speed in km/h"
+        },
+        "climbM": {
+          "type": "number",
+          "description": "Total elevation gain in meters"
+        },
+        "descentM": {
+          "type": "number",
+          "description": "Total elevation loss in meters"
+        },
+        "effort": {
+          "type": "number",
+          "description": "Perceived exertion rating 1 to 10"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Activity notes",
+          "maxLength": 600
+        },
+        "points": {
+          "type": "array",
+          "description": "Downsampled GPS coordinates for route preview"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "date",
+        "sportType",
+        "distanceKm",
+        "durationSec",
+        "movingTimeSec",
+        "avgSpeedKmH",
+        "maxSpeedKmH",
+        "climbM",
+        "descentM",
+        "effort",
+        "notes",
+        "points",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserBadge": {
+      "title": "UserBadge",
+      "description": "Milestone achievement badge unlocked by an authenticated cyclist",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Badge document ID matching badgeId",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "badgeId": {
+          "type": "string",
+          "description": "Milestone badge identifier",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "unlockedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO date when milestone was achieved",
+          "maxLength": 40
+        },
+        "triggerRideTitle": {
+          "type": "string",
+          "description": "Title of the ride that unlocked the badge",
+          "maxLength": 120
+        },
+        "xpReward": {
+          "type": "number",
+          "description": "XP reward granted for this milestone"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "badgeId",
+        "unlockedAt",
+        "triggerRideTitle",
+        "xpReward",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Authenticated user athlete profile"
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Isolated PII document for authenticated user"
+    },
+    "/users/{userId}/rides/{rideId}": {
+      "schema": { "$ref": "#/entities/SavedRide" },
+      "description": "User-owned saved GPS rides"
+    },
+    "/users/{userId}/badges/{badgeId}": {
+      "schema": { "$ref": "#/entities/UserBadge" },
+      "description": "User-owned unlocked milestone achievement badges"
+    },
+    "/publicProfiles/{userId}": {
+      "schema": { "$ref": "#/entities/PublicProfile" },
+      "description": "Non-PII public community rider summaries"
+    },
+    "/publicMessages/{messageId}": {
+      "schema": { "$ref": "#/entities/PublicChatMessage" },
+      "description": "Persistent public and group ride chat messages"
+    },
+    "/dmThreads/{dmRoomId}": {
+      "schema": { "$ref": "#/entities/DmThread" },
+      "description": "Private 1-to-1 DM conversation thread"
+    },
+    "/dmThreads/{dmRoomId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/DmMessage" },
+      "description": "Messages inside a private 1-to-1 DM thread"
+    }
+  }
+}
